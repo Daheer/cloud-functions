@@ -1,39 +1,69 @@
 from appwrite.client import Client
-from appwrite.services.users import Users
-from appwrite.exception import AppwriteException
 import os
+import time
+from agora_token_builder import RtcTokenBuilder
+import json
 
 # This Appwrite function will be executed every time your function is triggered
 def main(context):
-    # You can use the Appwrite SDK to interact with other services
-    # For this example, we're using the Users service
-    client = (
-        Client()
-        .set_endpoint(os.environ["APPWRITE_FUNCTION_API_ENDPOINT"])
-        .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
-        .set_key(context.req.headers["x-appwrite-key"])
-    )
-    users = Users(client)
-
+    # Log that the function is being executed
+    context.log("Agora Token Generator function executing")
+    
     try:
-        response = users.list()
-        # Log messages and errors to the Appwrite Console
-        # These logs won't be seen by your end users
-        context.log("Total users: " + str(response["total"]))
-    except AppwriteException as err:
-        context.error("Could not list users: " + repr(err))
-
-    # The req object contains the request data
-    if context.req.path == "/ping":
-        # Use res object to respond with text(), json(), or binary()
-        # Don't forget to return a response!
-        return context.res.text("Pong")
-
-    return context.res.json(
-        {
-            "motto": "Build like a team of hundreds_",
-            "learn": "https://appwrite.io/docs",
-            "connect": "https://appwrite.io/discord",
-            "getInspired": "https://builtwith.appwrite.io",
-        }
-    )
+        # Parse request body
+        # Appwrite passes the request body as a string, so we need to parse it
+        print(context.req.body)
+        if context.req.body:
+            try:
+                body = json.loads(context.req.body)
+                context.log(f"Request body: {body}")
+            except json.JSONDecodeError:
+                context.log("Failed to parse request body as JSON")
+                return context.res.json({"error": "Invalid JSON in request body"}, status_code=400)
+        else:
+            body = {}
+        
+        # Get parameters from the request body
+        channel_name = body.get("channelName")
+        uid = body.get("uid", 0)  # Default to 0 if not provided
+        expire_time = body.get("expireTime", 3600)  # Default to 1 hour
+        
+        # Validate required parameters
+        if not channel_name:
+            context.log("Missing required parameter: channelName")
+            return context.res.json({"error": "channelName is required"}, status_code=400)
+            
+        # Retrieve Agora credentials from environment variables
+        app_id = os.environ.get("AGORA_APP_ID")
+        app_certificate = os.environ.get("AGORA_APP_CERTIFICATE")
+        
+        # Validate that credentials are available
+        if not app_id or not app_certificate:
+            context.log("Agora credentials not configured")
+            return context.res.json({"error": "Agora credentials are not set"}, status_code=500)
+        
+        # Generate token
+        current_timestamp = int(time.time())
+        privilege_expired_ts = current_timestamp + expire_time
+        
+        # Build token with UID
+        token = RtcTokenBuilder.buildTokenWithUid(
+            app_id, 
+            app_certificate, 
+            channel_name, 
+            uid, 
+            1,  # Role: 1 for publisher
+            privilege_expired_ts
+        )
+        
+        context.log(f"Token generated successfully for channel: {channel_name}")
+        
+        # Return the token directly in the response
+        # This matches what your Flutter client expects
+        return context.res.json({
+            "token": token
+        })
+        
+    except Exception as e:
+        context.error(f"Error generating token: {str(e)}")
+        return context.res.json({"error": str(e)})
