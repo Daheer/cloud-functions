@@ -12,6 +12,7 @@ def main(context):
     try:
         # Parse request body
         # Appwrite passes the request body as a string, so we need to parse it
+        print(context.req.body)
         if context.req.body:
             try:
                 body = json.loads(context.req.body)
