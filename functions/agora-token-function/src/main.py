@@ -11,6 +11,8 @@ def main(context):
     if not app_id or not app_certificate:
         return context.res.json({"error": "Agora credentials are not set."}, status_code=500)
 
+    print(context.req.body)
+
     # Access the request body directly
     body = context.req.body
 
