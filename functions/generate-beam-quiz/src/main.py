@@ -104,7 +104,7 @@ def main(context):
 
         if len(response) == 0: return context.res.json({"error": "Quiz list is empty"})
         
-        if len(response >= 5):
+        if len(response) >= 5:
             final_response = random.sample(response, 5)
         else:
             final_response = response
