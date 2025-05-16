@@ -95,7 +95,7 @@ def main(context):
         )
             
         # Validate that credentials are available
-        if not gemini_api_key or not app_certificate:
+        if not gemini_api_key:
             context.log("Gemini credentials not configured")
             return context.res.json({"error": "Gemini credentials are not set"})
         
