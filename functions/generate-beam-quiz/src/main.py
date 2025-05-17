@@ -102,6 +102,9 @@ def main(context):
         
         response = generate(client, profession, experience)
 
+        context.log(type(response))
+        context.log(response)
+
         if len(response) == 0: return context.res.json({"error": "Quiz list is empty"})
         
         if len(response) >= 5:
