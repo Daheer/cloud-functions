@@ -108,6 +108,9 @@ def main(context):
             final_response = random.sample(response, 5)
         else:
             final_response = response
+
+        context.log("Successfully generated quizes")
+        context.log(f"Sneak peak {final_response[0]['question']} -> {final_response[0]['answer']}")
         
         # Return the token directly in the response
         # This matches what your Flutter client expects
