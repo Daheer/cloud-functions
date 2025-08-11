@@ -3,6 +3,8 @@ import time
 import json
 import random
 import base64
+import re
+
 from google import genai
 import google.generativeai as generativeai
 from google.genai import types
