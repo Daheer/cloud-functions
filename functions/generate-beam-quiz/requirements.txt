@@ -1,2 +1,3 @@
 appwrite
 google-genai
+google-generativeai
