@@ -4,12 +4,26 @@ import json
 import random
 import base64
 from google import genai
+import google.generativeai as generativeai
 from google.genai import types
 
+def get_latest_stable_flash(models):
+    versioned = []
+    for m in models:
+        match = re.match(r"models/gemini-(\d+\.\d+)-flash$", m)
+        if match:
+            version = tuple(map(int, match.group(1).split(".")))
+            versioned.append((version, m))
+
+    if not versioned:
+        return None
+
+    versioned.sort(reverse=True)
+    return versioned[0][1]
 
 def generate(client, profession, experience):
     
-    model = "gemini-2.5-flash-preview-04-17"
+    model = get_latest_stable_flash([model.name for model in generativeai.list_models()])
     contents = [
         types.Content(
             role="user",
